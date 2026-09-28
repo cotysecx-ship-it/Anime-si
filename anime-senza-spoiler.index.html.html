@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Anime senza spoiler</title>
+<style>
+:root{
+  --bg:#f6f4fb; --card:#ffffff; --ink:#1d1b26; --muted:#6b667a; --line:#e4e0ef;
+  --accent:#6d4aff; --accent-ink:#ffffff; --chip:#eee9ff; --chip-ink:#4a30c4;
+  --ok:#1f8f5f; --warn:#b26a00; --bad:#c23b3b;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14121c; --card:#1e1b2a; --ink:#f0eefa; --muted:#a19cb5; --line:#2e2a40;
+    --accent:#8f74ff; --accent-ink:#14121c; --chip:#2b2545; --chip-ink:#c9bcff;
+    --ok:#4cd39a; --warn:#f0b04a; --bad:#ff7b7b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14121c; --card:#1e1b2a; --ink:#f0eefa; --muted:#a19cb5; --line:#2e2a40;
+  --accent:#8f74ff; --accent-ink:#14121c; --chip:#2b2545; --chip-ink:#c9bcff;
+  --ok:#4cd39a; --warn:#f0b04a; --bad:#ff7b7b;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px 40px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
+  padding:14px 0 10px;border-bottom:1px solid var(--line)}
+h1{font-size:20px;margin:0 0 2px;letter-spacing:-.01em}
+.sub{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.add{display:flex;gap:8px}
+.add input{flex:1;min-width:0;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);font-size:16px;outline:none}
+.add input:focus{border-color:var(--accent)}
+button,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:12px}
+.btn{background:var(--accent);color:var(--accent-ink);padding:12px 16px;font-weight:600}
+.btn:disabled{opacity:.5}
+.tabs{display:flex;gap:6px;margin-top:10px;overflow-x:auto}
+.tab{background:transparent;color:var(--muted);border:1px solid var(--line);padding:6px 12px;
+  font-size:13px;border-radius:999px;white-space:nowrap}
+.tab[aria-pressed="true"]{background:var(--chip);color:var(--chip-ink);border-color:transparent;font-weight:600}
+#list{display:flex;flex-direction:column;gap:22px;margin-top:14px}
+.group{display:flex;flex-direction:column;gap:12px}
+.group h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.title{font-size:17px;font-weight:700;margin:0;line-height:1.3;word-break:break-word}
+.orig{font-size:12.5px;color:var(--muted);margin-top:1px}
+.meta{font-size:12.5px;color:var(--muted);margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--chip);color:var(--chip-ink);font-size:12px;padding:3px 9px;border-radius:999px}
+.syn{margin:10px 0 0}
+.src{font-size:11.5px;color:var(--muted);margin-top:8px}
+.more{margin-top:10px;display:none;border-top:1px dashed var(--line);padding-top:10px}
+.card.open .more{display:block}
+.more h4{margin:8px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.more p{margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.sm{background:transparent;border:1px solid var(--line);color:var(--ink);padding:7px 11px;font-size:13px;border-radius:12px}
+select.sm{background:var(--card);max-width:100%}
+.sm.on{background:var(--ok);border-color:var(--ok);color:var(--accent-ink);font-weight:600}
+.sm.del{color:var(--bad)}
+.state{color:var(--muted);font-size:14px;display:flex;align-items:center;gap:8px;margin-top:8px}
+.state.err{color:var(--bad)}
+.state.warn{color:var(--warn)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);
+  animation:r .8s linear infinite;flex:none}
+@keyframes r{to{transform:rotate(360deg)}}
+.empty{text-align:center;color:var(--muted);padding:44px 10px;font-size:15px;white-space:pre-line}
+.note{font-size:12px;color:var(--muted);text-align:center;margin-top:22px}
+#banner{display:none;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--chip);
+  color:var(--chip-ink);font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎌 Anime senza spoiler</h1>
+    <p class="sub">Aggiungi un titolo: ricevi solo la premessa, divisa per genere.</p>
+    <div class="add">
+      <input id="q" type="text" placeholder="Es. Frieren, Mob Psycho 100…" enterkeyhint="send" autocomplete="off" autocapitalize="sentences">
+      <button id="go" class="btn" type="button">Aggiungi</button>
+    </div>
+    <div class="tabs" role="group" aria-label="Filtro">
+      <button class="tab" data-f="all" aria-pressed="true" type="button">Tutti</button>
+      <button class="tab" data-f="todo" aria-pressed="false" type="button">Da vedere</button>
+      <button class="tab" data-f="seen" aria-pressed="false" type="button">Visti</button>
+    </div>
+  </header>
+  <div id="banner"></div>
+  <div id="list"></div>
+  <p class="note">Le sinossi arrivano da MyAnimeList e Wikipedia e sono tradotte in automatico in italiano (la traduzione può essere imprecisa). Di solito raccontano solo la premessa, ma non è garantito al 100% che siano prive di spoiler.</p>
+</div>
+
+<script>
+(function(){
+  var KEY = "anime-list-v1";
+  var items = [];
+  var filter = "all";
+  var sample = null;
+  var queue = [];
+  var running = false;
+
+  var MAP = {"Romance":"Romantico","Suspense":"Thriller","Mystery":"Mistero","Fantasy":"Fantasy","Action":"Azione",
+    "Comedy":"Commedia","Drama":"Drammatico","Sci-Fi":"Fantascienza","Slice of Life":"Slice of Life","Horror":"Horror",
+    "Adventure":"Avventura","Supernatural":"Sovrannaturale","Sports":"Sport","Avant Garde":"Avant-garde",
+    "Gourmet":"Gastronomia","Ecchi":"Ecchi","Boys Love":"Boys Love","Girls Love":"Girls Love"};
+  var ORDER = ["Romantico","Thriller","Fantasy","Horror","Fantascienza","Mistero","Azione","Avventura","Sovrannaturale",
+    "Commedia","Slice of Life","Sport","Drammatico","Gastronomia","Avant-garde","Ecchi","Boys Love","Girls Love","Altri"];
+  var TYPES = {"TV":"Serie TV","Movie":"Film","OVA":"OVA","ONA":"ONA","Special":"Speciale","TV Special":"Speciale","Music":"Video musicale"};
+  var JIKAN = "https://api.jikan.moe/v4/anime";
+
+  var $list = document.getElementById("list");
+  var $q = document.getElementById("q");
+  var $go = document.getElementById("go");
+  var $banner = document.getElementById("banner");
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(raw){ var p = JSON.parse(raw); if(Array.isArray(p)) items = p; }
+    }catch(e){}
+    items.forEach(function(it){
+      if(it.status === "loading" || it.status === "queued"){ it.status = "error"; it.err = "Operazione interrotta. Tocca Riprova."; }
+    });
+  }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(items)); }catch(e){} }
+
+  function el(tag, cls, text){
+    var n = document.createElement(tag);
+    if(cls) n.className = cls;
+    if(text != null) n.textContent = text;
+    return n;
+  }
+  function str(v){ return (typeof v === "string") ? v.trim() : (typeof v === "number" ? String(v) : ""); }
+  function arr(v){ return Array.isArray(v) ? v.map(str).filter(Boolean).slice(0,8) : []; }
+  function enc(s){ return encodeURIComponent(s); }
+  function norm(s){ return str(s).toLowerCase().replace(/[^a-z0-9]+/g,""); }
+
+  function normG(x){
+    x = str(x); if(!x) return null;
+    if(MAP[x]) return MAP[x];
+    var l = x.toLowerCase();
+    for(var i=0;i<ORDER.length;i++){ if(ORDER[i].toLowerCase() === l) return ORDER[i]; }
+    return null;
+  }
+  function groupOf(it){
+    if(it.group && ORDER.indexOf(it.group) > -1) return it.group;
+    var d = it.data || {};
+    var gs = arr(d.generi).map(normG).filter(Boolean);
+    for(var i=0;i<ORDER.length;i++){ if(gs.indexOf(ORDER[i]) > -1) return ORDER[i]; }
+    return "Altri";
+  }
+
+  /* ---------- Fonti esterne (senza Claude) ---------- */
+  async function getJSON(url){
+    var ctl = new AbortController();
+    var t = setTimeout(function(){ ctl.abort(); }, 12000);
+    try{
+      var r = await fetch(url, {signal: ctl.signal});
+      if(r.status === 429) throw {code:"rate"};
+      if(!r.ok) throw {code:"http"};
+      return await r.json();
+    } finally { clearTimeout(t); }
+  }
+
+  function clean(t, n, max){
+    t = str(t).replace(/\[Written by[^\]]*\]/gi,"").replace(/\(Source:[^)]*\)/gi,"").replace(/\s+/g," ").trim();
+    if(!t) return "";
+    var ss = t.match(/[^.!?]+[.!?]+["')\]]*/g) || [t];
+    var out = "";
+    for(var i=0;i<ss.length && i<n;i++){
+      var next = (out ? out + " " : "") + ss[i].trim();
+      if(out && next.length > max) break;
+      out = next;
+    }
+    return out;
+  }
+
+  function toRec(a){
+    if(!a || typeof a !== "object") return null;
+    var titolo = str(a.title_english) || str(a.title);
+    if(!titolo) return null;
+    var orig = str(a.title_japanese) || str(a.title);
+    var gens = [], temi = [];
+    (a.genres || []).forEach(function(g){ var m = MAP[g && g.name]; if(m && gens.indexOf(m) < 0) gens.push(m); });
+    (a.themes || []).forEach(function(g){ var n = str(g && g.name); if(n && temi.length < 3) temi.push(n); });
+    var alt = [a.title, a.title_english, a.title_japanese].concat((a.titles || []).map(function(x){ return x && x.title; }))
+      .map(norm).filter(Boolean);
+    var anno = a.year || (a.aired && a.aired.prop && a.aired.prop.from && a.aired.prop.from.year) || "";
+    return {
+      titolo: titolo,
+      titolo_originale: orig !== titolo ? orig : "",
+      tipo: TYPES[a.type] || str(a.type),
+      anno: str(anno),
+      episodi: a.episodes ? String(a.episodes) : "",
+      studio: (a.studios && a.studios[0] && str(a.studios[0].name)) || "",
+      generi: gens, temi: temi,
+      sinossi: clean(a.synopsis, 3, 420) || "Nessuna sinossi disponibile per questo titolo.",
+      alt: alt, lang: "en"
+    };
+  }
+
+  function bestIndex(cands, q){
+    var n = norm(q);
+    for(var i=0;i<cands.length;i++){ if(cands[i].alt && cands[i].alt.indexOf(n) > -1) return i; }
+    return 0;
+  }
+
+  async function wiki(q){
+    var langs = ["it","en"], anyOk = false;
+    for(var i=0;i<langs.length;i++){
+      var lang = langs[i];
+      try{
+        var s = await getJSON("https://" + lang + ".wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
+          enc(q + " anime") + "&srlimit=1&format=json&origin=*");
+        anyOk = true;
+        var hit = s && s.query && s.query.search && s.query.search[0];
+        if(!hit) continue;
+        var p = await getJSON("https://" + lang + ".wikipedia.org/api/rest_v1/page/summary/" + enc(hit.title.replace(/ /g,"_")));
+        var ex = clean(p && p.extract, 2, 420);
+        if(!ex || !/anim|manga|giappon|japan/i.test(ex)) continue;
+        return {titolo: str(p.title) || hit.title, titolo_originale:"", tipo:"", anno:"", episodi:"", studio:"",
+                generi:[], temi:[], sinossi: ex, lang: lang};
+      }catch(e){ if(e && e.code === "rate") throw e; }
+    }
+    if(!anyOk) throw {code:"net"};
+    return null;
+  }
+
+  async function fromWeb(q){
+    var cands = [], jNet = false;
+    try{
+      var j = await getJSON(JIKAN + "?q=" + enc(q) + "&limit=5&sfw=true");
+      cands = ((j && j.data) || []).map(toRec).filter(Boolean);
+    }catch(e){
+      if(e && e.code === "rate") throw e;
+      jNet = true;
+    }
+    if(cands.length) return {cands: cands, ci: bestIndex(cands, q), src: "MyAnimeList"};
+    var w = null, wNet = false;
+    try{ w = await wiki(q); }catch(e){ if(e && e.code === "rate") throw e; wNet = true; }
+    if(w) return {cands: [w], ci: 0, src: "Wikipedia"};
+    if(jNet && wNet) throw {code:"net"};
+    return null;
+  }
+
+  /* ---------- Traduzione automatica in italiano (MyMemory, gratuita) ---------- */
+  async function translateRec(rec){
+    if(!rec || rec.tr || rec.lang === "it") return;
+    var text = str(rec.sinossi);
+    if(!text || text.indexOf("Nessuna sinossi") === 0) return;
+    var ss = text.match(/[^.!?]+[.!?]+["')\]]*/g) || [text];
+    var chunks = [], cur = "";
+    ss.forEach(function(x){
+      x = x.trim();
+      if(cur && (cur + " " + x).length > 450){ chunks.push(cur); cur = x; }
+      else cur = cur ? cur + " " + x : x;
+    });
+    if(cur) chunks.push(cur);
+    if(chunks.some(function(c){ return c.length > 490; })) return;
+    var out = [];
+    for(var i=0;i<chunks.length;i++){
+      var j = await getJSON("https://api.mymemory.translated.net/get?q=" + enc(chunks[i]) + "&langpair=en|it");
+      var t = j && j.responseData && j.responseData.translatedText;
+      if(!t || String(j.responseStatus) !== "200" || /MYMEMORY WARNING|QUERY LENGTH/i.test(t)) return;
+      var ta = document.createElement("textarea"); ta.innerHTML = t;
+      out.push(ta.value);
+    }
+    rec.tr = out.join(" ");
+  }
+
+  /* ---------- Opzionale: Claude, solo su richiesta ---------- */
+  function buildPrompt(title){
+    return [
+      "Sei un assistente per appassionati di anime. L'utente NON ha mai visto questo titolo e non vuole assolutamente spoiler.",
+      "Titolo indicato dall'utente: \"" + title.replace(/"/g, "'") + "\"",
+      "",
+      "Crea una scheda in italiano. REGOLE FONDAMENTALI:",
+      "- Descrivi solo la premessa di partenza: il mondo, i personaggi principali e la situazione iniziale, al massimo ciò che si capisce nei primissimi episodi.",
+      "- Niente colpi di scena, rivelazioni, morti, tradimenti, sviluppi di trama, relazioni che nascono, finale o allusioni a ciò che accade dopo.",
+      "- Non inventare nulla. Se non riconosci il titolo con ragionevole certezza, rispondi con riconosciuto=false e una breve nota in italiano.",
+      "- Le avvertenze devono essere solo generiche (es. violenza esplicita, temi maturi) e mai rivelare la trama.",
+      "- Nei generi usa solo nomi tra questi: Romantico, Thriller, Fantasy, Horror, Fantascienza, Mistero, Azione, Avventura, Sovrannaturale, Commedia, Slice of Life, Sport, Drammatico.",
+      "",
+      "Rispondi SOLO con un oggetto JSON di questa forma:",
+      "{\"riconosciuto\":true,\"titolo\":\"titolo comune\",\"titolo_originale\":\"titolo giapponese/romaji\",\"anno\":\"anno\",\"tipo\":\"Serie TV | Film | OVA\",\"episodi\":\"numero episodi se noto\",\"studio\":\"studio\",\"generi\":[\"...\"],\"sinossi\":\"2-4 frasi, solo premessa\",\"tono\":\"una frase sull'atmosfera\",\"perche_guardarlo\":\"1-2 frasi senza spoiler\",\"adatto_se\":\"una frase\",\"avvertenze\":[\"...\"],\"nota\":\"\"}",
+      "Se non riconosciuto: {\"riconosciuto\":false,\"nota\":\"...\"}"
+    ].join("\n");
+  }
+
+  /* ---------- Coda e stato ---------- */
+  function enqueue(it, mode, fresh){
+    it.status = "queued"; it.err = "";
+    queue.push({item: it, mode: mode, fresh: !!fresh});
+    save(); render(); pump();
+  }
+
+  async function pump(){
+    if(running) return;
+    running = true;
+    while(queue.length){
+      var job = queue.shift();
+      var it = job.item;
+      if(!items.some(function(x){ return x.id === it.id; })) continue;
+      it.status = "loading"; render();
+      try{
+        if(job.mode === "claude"){
+          if(!sample) throw {code:"none"};
+          var data = await sample.json(buildPrompt(it.query), job.fresh ? {cache:false} : undefined);
+          if(Array.isArray(data)) data = data[0];
+          if(!data || typeof data !== "object") throw {code:"invalid_json"};
+          it.data = data; it.cands = null; it.group = null; it.src = "Claude (IA)";
+          it.status = (data.riconosciuto === false) ? "unknown" : "ok";
+        } else {
+          var res = await fromWeb(it.query);
+          if(!res){
+            it.data = {nota: "Nessun risultato trovato. Controlla il nome (meglio quello inglese o romaji)."};
+            it.cands = null; it.status = "unknown";
+          } else {
+            it.cands = res.cands; it.ci = res.ci; it.data = res.cands[res.ci];
+            it.src = res.src; it.group = null;
+            try{ await translateRec(it.data); }catch(e){}
+            it.status = "ok";
+          }
+        }
+        it.err = "";
+      }catch(e){
+        it.status = "error";
+        it.err = errText(e && e.code);
+      }
+      save(); render();
+    }
+    running = false;
+  }
+
+  function errText(code){
+    switch(code){
+      case "net": return sample
+        ? "Da qui le fonti esterne sono bloccate. Usa il file scaricabile oppure tocca «Genera con Claude»."
+        : "Sei offline o la fonte non risponde. Riprova quando hai connessione.";
+      case "rate": return "Troppe richieste alla fonte. Aspetta qualche secondo e tocca Riprova.";
+      case "none": return "Claude non è disponibile in questa modalità.";
+      case "not_granted": return "Serve il permesso per usare Claude. Tocca il pulsante e accetta.";
+      case "rate_limited": return "Troppe richieste a Claude. Riprova tra poco.";
+      case "invalid_json":
+      case "empty_completion": return "Risposta non valida. Riprova.";
+      default: return "Qualcosa è andato storto. Tocca Riprova.";
+    }
+  }
+
+  /* ---------- Rendering ---------- */
+  function render(){
+    $list.textContent = "";
+    var shown = items.filter(function(it){
+      if(filter === "todo") return !it.seen;
+      if(filter === "seen") return !!it.seen;
+      return true;
+    });
+    if(!shown.length){
+      $list.appendChild(el("div","empty", items.length ? "Nessun titolo in questa sezione." :
+        "La tua lista è vuota.\nScrivi il nome di un anime qui sopra per iniziare."));
+      return;
+    }
+    var groups = {};
+    shown.forEach(function(it){ var g = groupOf(it); (groups[g] = groups[g] || []).push(it); });
+    ORDER.forEach(function(g){
+      var list = groups[g]; if(!list) return;
+      var sec = el("section","group");
+      sec.appendChild(el("h3", null, g + " · " + list.length));
+      list.slice().reverse().forEach(function(it){ sec.appendChild(card(it)); });
+      $list.appendChild(sec);
+    });
+  }
+
+  function card(it){
+    var d = it.data || {};
+    var c = el("div","card" + (it.open ? " open" : ""));
+    var left = el("div");
+    left.appendChild(el("h2","title", str(d.titolo) || it.query));
+    var orig = str(d.titolo_originale);
+    if(orig && orig !== str(d.titolo)) left.appendChild(el("div","orig", orig));
+    c.appendChild(left);
+
+    var hasMore = false;
+    if(it.status === "loading"){
+      var s = el("div","state"); s.appendChild(el("span","spin")); s.appendChild(el("span",null,"Cerco la scheda…"));
+      c.appendChild(s);
+    } else if(it.status === "queued"){
+      c.appendChild(el("div","state","In coda…"));
+    } else if(it.status === "error"){
+      c.appendChild(el("div","state err", it.err || "Non sono riuscito a creare la scheda."));
+    } else if(it.status === "unknown"){
+      c.appendChild(el("div","state warn", str(d.nota) || "Non riconosco questo titolo con certezza."));
+    } else if(it.status === "ok"){
+      var meta = [str(d.tipo), str(d.anno), str(d.episodi) ? (str(d.episodi) + " ep.") : "", str(d.studio)].filter(Boolean).join(" · ");
+      if(meta) c.appendChild(el("div","meta", meta));
+      var g = arr(d.generi).concat(arr(d.temi));
+      if(g.length){ var ch = el("div","chips"); g.forEach(function(x){ ch.appendChild(el("span","chip",x)); }); c.appendChild(ch); }
+      var shownSyn = (d.tr && !it.showOrig) ? d.tr : d.sinossi;
+      if(str(shownSyn)) c.appendChild(el("p","syn", str(shownSyn)));
+      var more = el("div","more");
+      [["Atmosfera", d.tono],["Perché guardarlo", d.perche_guardarlo],["Fa per te se…", d.adatto_se]].forEach(function(r){
+        if(str(r[1])){ hasMore = true; more.appendChild(el("h4",null,r[0])); more.appendChild(el("p",null,str(r[1]))); }
+      });
+      var av = arr(d.avvertenze);
+      if(av.length){ hasMore = true; more.appendChild(el("h4",null,"Da sapere")); more.appendChild(el("p",null,av.join(", "))); }
+      if(hasMore) c.appendChild(more);
+      c.appendChild(el("div","src","Fonte: " + (it.src || "IA")));
+    }
+
+    var act = el("div","actions");
+    if(it.status === "ok" && hasMore){
+      var t = el("button","sm", it.open ? "Meno dettagli" : "Più dettagli"); t.type = "button";
+      t.onclick = function(){ it.open = !it.open; save(); render(); };
+      act.appendChild(t);
+    }
+    var sb = el("button","sm" + (it.seen ? " on" : ""), it.seen ? "✓ Visto" : "Segna come visto"); sb.type = "button";
+    sb.onclick = function(){ it.seen = !it.seen; save(); render(); };
+    act.appendChild(sb);
+
+    if(it.status === "ok"){
+      var sel = el("select","sm"); sel.setAttribute("aria-label","Categoria");
+      ORDER.forEach(function(g){ var o = el("option",null,g); o.value = g; if(g === groupOf(it)) o.selected = true; sel.appendChild(o); });
+      sel.onchange = function(){ it.group = sel.value; save(); render(); };
+      act.appendChild(sel);
+    }
+    if(it.status === "ok" && it.cands && it.cands.length > 1){
+      var nb = el("button","sm","Non è questo? (" + ((it.ci || 0) + 1) + "/" + it.cands.length + ")"); nb.type = "button";
+      nb.onclick = async function(){ it.ci = ((it.ci || 0) + 1) % it.cands.length; it.data = it.cands[it.ci]; it.group = null; it.showOrig = false; save(); render(); try{ await translateRec(it.data); save(); render(); }catch(e){} };
+      act.appendChild(nb);
+    }
+    if(it.status === "ok" && d.tr){
+      var tb = el("button","sm", it.showOrig ? "Mostra in italiano" : "Mostra originale (EN)"); tb.type = "button";
+      tb.onclick = function(){ it.showOrig = !it.showOrig; save(); render(); };
+      act.appendChild(tb);
+    }
+    if(it.status === "error" || it.status === "unknown" || it.status === "ok"){
+      var viaClaude = it.src && it.src.indexOf("Claude") === 0;
+      var rb = el("button","sm", it.status === "ok" ? "Aggiorna" : "Riprova"); rb.type = "button";
+      rb.onclick = function(){ enqueue(it, viaClaude ? "claude" : "web", viaClaude); };
+      act.appendChild(rb);
+    }
+    if(sample && (it.status === "error" || it.status === "unknown")){
+      var cb = el("button","sm","Genera con Claude"); cb.type = "button";
+      cb.onclick = function(){ enqueue(it, "claude", false); };
+      act.appendChild(cb);
+    }
+    var db = el("button","sm del","Rimuovi"); db.type = "button";
+    db.onclick = function(){
+      items = items.filter(function(x){ return x.id !== it.id; });
+      queue = queue.filter(function(x){ return x.item.id !== it.id; });
+      save(); render();
+    };
+    act.appendChild(db);
+    c.appendChild(act);
+    return c;
+  }
+
+  function add(){
+    var name = $q.value.trim();
+    if(!name) return;
+    var dup = items.find(function(x){ return x.query.toLowerCase() === name.toLowerCase(); });
+    if(dup){ $q.value = ""; filter = "all"; syncTabs(); render(); return; }
+    var it = {id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+              query: name, data: null, status: "queued", seen: false, open: false, added: Date.now()};
+    items.push(it);
+    $q.value = "";
+    if(filter === "seen"){ filter = "all"; syncTabs(); }
+    enqueue(it, "web", false);
+  }
+
+  function syncTabs(){
+    document.querySelectorAll(".tab").forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.f === filter ? "true" : "false");
+    });
+  }
+
+  $go.addEventListener("click", add);
+  $q.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); add(); } });
+  document.querySelectorAll(".tab").forEach(function(b){
+    b.addEventListener("click", function(){ filter = b.dataset.f; syncTabs(); render(); });
+  });
+
+  load();
+  render();
+
+  (async function init(){
+    try{
+      if(window.claude && window.claude.use){ sample = await window.claude.use("sample"); }
+    }catch(e){ sample = null; }
+    if(sample){
+      $banner.style.display = "block";
+      $banner.textContent = "Aperta dentro Claude, questa pagina non può contattare Wikipedia e MyAnimeList. Per le schede gratuite usa il file scaricabile; qui puoi usare «Genera con Claude».";
+      render();
+    }
+  })();
+})();
+</script>
+</body>
+</html>
